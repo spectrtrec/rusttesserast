@@ -1,5 +1,5 @@
 use std::fmt::{self, Display};
-use std::error::{Error};
+use std::error::Error;
 
 #[derive(Debug)]
 pub enum TesseractError{
