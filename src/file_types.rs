@@ -1,4 +1,4 @@
-pub enum FileFormat {
+pub enum OutputFileFormat {
     PDF,
     ALTO,
     HOCR,
@@ -7,15 +7,15 @@ pub enum FileFormat {
     OSD,
 }
 
-impl FileFormat {
+impl OutputFileFormat {
     pub fn get_type(&self) -> &str {
         match self {
-            FileFormat::PDF => "pdf",
-            FileFormat::ALTO => "alto",
-            FileFormat::HOCR => "hocr",
-            FileFormat::TSV => "tsv",
-            FileFormat::TXT => "txt",
-            FileFormat::OSD => "osd",
+            OutputFileFormat::PDF => "pdf",
+            OutputFileFormat::ALTO => "alto",
+            OutputFileFormat::HOCR => "hocr",
+            OutputFileFormat::TSV => "tsv",
+            OutputFileFormat::TXT => "txt",
+            OutputFileFormat::OSD => "osd",
         }
     }
 }
