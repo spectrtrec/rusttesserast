@@ -2,21 +2,27 @@ use crate::constanst::TesseractDefaultConstants;
 use crate::errors::TesseractError;
 use crate::file_types::OutputFileFormat;
 use crate::utils::get_current_working_dir;
+use derivative::Derivative;
+use either::*;
+use pl::TessBaseApiInitError;
 use std::ffi::CString;
 use std::fs::{metadata, File};
 use std::io::Write;
-use std::ops::Deref;
 use std::path::Path;
-use std::process::Command;
 use tesseract_plumbing as pl;
 
-#[derive(Default)]
+#[derive(Derivative)]
+#[derivative(Default, Debug)]
 pub struct TesseractApi {
-    dpi: i32,
-    psm: u32,
-    oem: u32,
-    timeout: i32,
-    tess_pl: pl::TessBaseApi,
+    #[derivative(Default(value = "300"))]
+    pub dpi: i32,
+    #[derivative(Default(value = "4"))]
+    pub psm: u32,
+    #[derivative(Default(value = "3"))]
+    pub oem: u32,
+    #[derivative(Default(value = "30"))]
+    pub timeout: i32,
+    pub tess_pl: pl::TessBaseApi,
 }
 
 impl TesseractApi {
@@ -30,10 +36,32 @@ impl TesseractApi {
         };
     }
 
-    pub fn new(datapath: Option<&str>, lang: Option<&str>) -> Result<TesseractApi, TesseractError> {
-        let mut tesseract = TesseractApi::default();
-        tesseract.tess_pl.set_source_resolution(tesseract.dpi);
-        tesseract.tess_pl.set_page_seg_mode(tesseract.psm);
+    pub fn get_attr(
+        &self,
+        field_string: &str,
+    ) -> Either<Result<&i32, String>, Result<&u32, String>> {
+        match field_string {
+            "dpi" => Left(Ok(&self.dpi)),
+            "psm" => Right(Ok(&self.psm)),
+            "oem" => Right(Ok(&self.oem)),
+            "timeout" => Left(Ok(&self.timeout)),
+            _ => Right(Err(format!("invalid field name to get '{}'", field_string))),
+        }
+    }
+
+    pub fn new(
+        tesseract: Option<TesseractApi>,
+        datapath: Option<&str>,
+        lang: Option<&str>,
+    ) -> Result<TesseractApi, TesseractError> {
+        let mut tess = match tesseract {
+            Some(tesseract) => tesseract,
+            None => TesseractApi::default(),
+        };
+
+        tess.tess_pl.set_source_resolution(tess.dpi);
+        tess.tess_pl.set_page_seg_mode(tess.psm);
+
         let datapath = match datapath {
             Some(i) => Some(CString::new(i).unwrap()),
             None => None,
@@ -42,19 +70,25 @@ impl TesseractApi {
             Some(i) => Some(CString::new(i).unwrap()),
             None => None,
         };
-        tesseract
+        match tess
             .tess_pl
-            .init_4(datapath.as_deref(), lang.as_deref(), tesseract.oem)
-            .ok();
-        Ok(tesseract)
+            .init_4(datapath.as_deref(), lang.as_deref(), tess.oem)
+        {
+            Ok(()) => Ok(tess),
+            Err(TessBaseApiInitError {}) => Err(TesseractError::TesseractInitError),
+        }
     }
 
-    fn image_to_string(&mut self, filename: &str) -> Result<String, TesseractError> {
+    pub fn set_image(&mut self, filename: &str) -> Result<(), TesseractError> {
         match pl::leptonica_plumbing::Pix::read(&CString::new(filename).unwrap()) {
             Ok(pix) => self.tess_pl.set_image_2(&pix),
-            Err(PixReadError) => return Err(TesseractError::TesseractInitError),
+            Err(_) => return Err(TesseractError::NoSuchFileException),
         };
+        Ok(())
+    }
 
+    pub fn image_to_string(&mut self, filename: &str) -> Result<String, TesseractError> {
+        self.set_image(filename)?;
         Ok(self
             .tess_pl
             .get_utf8_text()
@@ -64,10 +98,8 @@ impl TesseractApi {
             .into_owned())
     }
 
-    fn image_to_hocr(&mut self, filename: &str) -> Result<String, TesseractError> {
-        self.tess_pl.set_image_2(
-            &pl::leptonica_plumbing::Pix::read(&CString::new(filename).unwrap()).unwrap(),
-        );
+    pub fn image_to_hocr(&mut self, filename: &str) -> Result<String, TesseractError> {
+        self.set_image(filename)?;
         Ok(self
             .tess_pl
             .get_hocr_text(0)
@@ -77,10 +109,8 @@ impl TesseractApi {
             .into_owned())
     }
 
-    fn image_to_tsv(&mut self, filename: &str) -> Result<String, TesseractError> {
-        self.tess_pl.set_image_2(
-            &pl::leptonica_plumbing::Pix::read(&CString::new(filename).unwrap()).unwrap(),
-        );
+    pub fn image_to_tsv(&mut self, filename: &str) -> Result<String, TesseractError> {
+        self.set_image(filename)?;
         Ok(self
             .tess_pl
             .get_tsv_text(0)
@@ -90,6 +120,7 @@ impl TesseractApi {
             .into_owned())
     }
 
+    #[allow(dead_code)]
     fn get_text(&mut self) -> Result<String, TesseractError> {
         Ok(self
             .tess_pl
@@ -100,7 +131,7 @@ impl TesseractApi {
             .into_owned())
     }
 
-    fn iter_through_img(
+    pub fn iter_through_img(
         &mut self,
         api_ogject: fn(&mut TesseractApi, &str) -> Result<String, TesseractError>,
         image_array: Vec<&str>,
@@ -112,26 +143,26 @@ impl TesseractApi {
         rec_vec
     }
 
-    fn save_doc(&mut self, path: Option<&str>, file_name: Option<&str>, doc_vec: Vec<String>) {
+    pub fn save_doc(&mut self, path: Option<&str>, file_name: Option<&str>, doc_vec: Vec<String>) {
         let binding = get_current_working_dir();
 
         let path = match path {
             Some(path) => path,
             None => binding.as_os_str().to_str().unwrap(),
         };
-        
+
         let defaul_filename = String::from("data.txt");
-        
+
         let file_name = match file_name {
             Some(file_name) => file_name,
             None => &defaul_filename,
         };
-        
+
         if !Path::new(path).exists() {
             format!("Path {path} doesnt exist.");
             panic!("Path {path} doesnt exist. Use another path.")
         }
-        
+
         let mut data_file =
             File::create(path.to_owned() + "/" + file_name).expect("creation failed");
         data_file
@@ -147,7 +178,6 @@ impl TesseractApi {
         output_type: &str,
     ) -> Result<(), TesseractError> {
         let output_type = match output_type {
-            "pdf" => OutputFileFormat::PDF,
             "txt" => OutputFileFormat::TXT,
             "tsv" => OutputFileFormat::TSV,
             "HOCR" => OutputFileFormat::HOCR,
@@ -163,12 +193,8 @@ impl TesseractApi {
             }
             _ => panic!("None existing format"),
         };
-        
-        self.save_doc(
-            save_path,
-            doc_name,
-            doc,
-        );
+
+        self.save_doc(save_path, doc_name, doc);
         Ok(())
     }
 }

@@ -1,6 +1,6 @@
-FROM rust:1.72
+FROM rust:1.73
 
-ARG TAG=5.3.1
+ARG TAG=5.3.3
 
 RUN mkdir /tmp/tesseract && \
     echo "Update & upgrade" && \
