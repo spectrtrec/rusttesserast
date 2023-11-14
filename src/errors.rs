@@ -1,7 +1,7 @@
 use std::fmt::{self, Display};
 use std::error::Error;
 
-#[derive(Debug)]
+#[derive(Debug, PartialEq)]
 pub enum TesseractError{
     TesseractInitError,
     NoSuchFileException,
