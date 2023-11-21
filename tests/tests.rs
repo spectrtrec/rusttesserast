@@ -93,57 +93,56 @@ fn test_new_method_error() -> Result<(), TesseractError> {
     Ok(())
 }
 
-#[test]
-fn test_hocr() -> Result<(), TesseractError> {
+#[tokio::test]
+async fn test_hocr() -> Result<(), TesseractError> {
     let mut cube = TesseractApi::new(
         None,
         Some(String::from("/usr/local/share/tessdata").as_str()),
         Some(String::from("eng").as_str()),
     )?;
-    let result = cube.image_to_hocr(String::from("tests/test_img.png").as_str())?;
-    assert!(result.contains(" <div class='ocr_page'"));
+    let result = cube.image_to_hocr(String::from("tests/test_img.png").as_str()).await;
+    assert!(result?.contains(" <div class='ocr_page'"));
     Ok(())
 }
 
-#[test]
-fn test_image_to_string() -> Result<(), TesseractError> {
+#[tokio::test]
+async fn test_image_to_string() -> Result<(), TesseractError> {
     let mut cube = TesseractApi::new(
         None,
         Some(String::from("/usr/local/share/tessdata").as_str()),
         Some(String::from("eng").as_str()),
     )?;
-    let result = cube.image_to_string(String::from("tests/test_img.png").as_str());
+    let result = cube.image_to_string(String::from("tests/test_img.png").as_str()).await;
     assert!(result?.contains("World!"));
     Ok(())
 }
 
-#[test]
-fn test_image_to_string_err() -> Result<(), TesseractError> {
+#[tokio::test]
+#[should_panic(expected = "There was a problem opening the file: NoSuchFileException")]
+async fn test_image_to_string_err() -> () {
     let mut cube = TesseractApi::new(
         None,
         Some(String::from("/usr/local/share/tessdata").as_str()),
         Some(String::from("eng").as_str()),
-    )?;
-    let result = cube.image_to_string(String::from("tests/test_imgk.png").as_str());
-    let expected: Result<(), TesseractError> = Err(TesseractError::NoSuchFileException);
-    assert_eq!(result.unwrap_err(), expected.unwrap_err());
-    Ok(())
+    ).unwrap();
+    let result = cube.image_to_string(String::from("tests/test_imgk.png").as_str()).await.unwrap();
+    ()
 }
 
-#[test]
-fn test_image_to_tsv() -> Result<(), TesseractError> {
+#[tokio::test]
+async fn test_image_to_tsv() -> Result<(), TesseractError> {
     let mut cube = TesseractApi::new(
         None,
         Some(String::from("/usr/local/share/tessdata").as_str()),
         Some(String::from("eng").as_str()),
     )?;
-    let result = cube.image_to_tsv(String::from("tests/test_img.png").as_str())?;
+    let result = cube.image_to_tsv(String::from("tests/test_img.png").as_str()).await?;
     assert_eq!(result, include_str!("data.txt"));
     Ok(())
 }
 
-#[test]
-fn test_recognize_doc() -> Result<(), TesseractError> {
+#[tokio::test]
+async fn test_recognize_doc() -> Result<(), TesseractError> {
     let mut tesseract_base = TesseractApi::new(
         None,
         Some(String::from("/usr/local/share/tessdata").as_str()),
@@ -151,13 +150,13 @@ fn test_recognize_doc() -> Result<(), TesseractError> {
     )
     .unwrap();
     let image_array = vec!["tests/test_img.png"];
-    tesseract_base.recognize_doc(None, None, image_array, "tsv");
+    tesseract_base.recognize_doc(None, None, image_array, "tsv").await?;
     Ok(())
 }
 
-#[test]
+#[tokio::test]
 #[should_panic(expected = "None existing format tsvs")]
-fn test_recognize_doc_panic() -> () {
+async fn test_recognize_doc_panic() -> () {
     let mut tesseract_base = TesseractApi::new(
         None,
         Some(String::from("/usr/local/share/tessdata").as_str()),
@@ -165,7 +164,7 @@ fn test_recognize_doc_panic() -> () {
     )
     .unwrap();
     let image_array = vec!["tests/test_img.png"];
-    tesseract_base.recognize_doc(None, None, image_array, "tsvs");
+    tesseract_base.recognize_doc(None, None, image_array, "tsvs").await;
 }
 
 #[test]
