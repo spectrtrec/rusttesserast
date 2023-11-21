@@ -1,10 +1,11 @@
 # rusttesserast
 rusttesserast is a simple library providing the asynchronous methods for tesseract api in Rust.
+Documentation - https://docs.rs/rusttesserast/0.0.1-alpha.4/rusttesserast/
 # Usage
 Add this to your Cargo.toml:
 ```
 [dependencies]
-rusttesserast = "0.0.1-alpha.2"
+rusttesserast = "0.0.1-alpha.4"
 ```
 ```
 use rusttesserast::tess_lib::TesseractApi;
@@ -15,7 +16,16 @@ async fn main() {
     let image_array = vec!["/workspaces/rusttesserast/tests/test_img.png", "/workspaces/rusttesserast/tests/test_img.png"];
     let test = tesseract_base.recognize_doc(None, None, image_array, "txt").await;
 }
+```
+```
+use rusttesserast::tess_lib::TesseractApi;
 
+#[tokio::main]
+async fn main() {
+    let mut tesseract_base = TesseractApi::new(Some(TesseractApi{dpi: 3, psm:3, ..Default::default()}), Some(String::from("/usr/local/share/tessdata").as_str()), Some(String::from("eng").as_str())).unwrap();
+    let image_array = vec!["/workspaces/rusttesserast/tests/test_img.png", "/workspaces/rusttesserast/tests/test_img.png"];
+    let test = tesseract_base.recognize_doc("test/save/path", "test_data_file.txt", image_array, "tsv").await;
+}
 ```
 # License
 Licensed under MIT license.

@@ -1,3 +1,34 @@
+//! Simple library providing asynchronous methods for tesseract api.
+//!
+//! Main function `recognize_doc` allows to recognize images and save data to a file. This function takes four parameters:
+//! 1. save_path: Option<&str> - path for saving a doc. If path is None, then file will be saved to a project dir.
+//! 2. doc_name: Option<&str> - name of a doc where recognized information will be saved. Default value - data.txt
+//! 3. image_array: Vec<&str> - vector which contains a paths to available images.
+//! 4. output_type: &str - a str which contains output type value. So far, only 4 types available (txt, tsv, hocr)
+//!
+//! # Examples
+//!
+//! ```rust, no_run
+//! use rusttesserast::tess_lib::TesseractApi;
+//!
+//! #[tokio::main]
+//! async fn main() {
+//!     let mut tesseract_base = TesseractApi::new(Some(TesseractApi{dpi: 3, psm:3, ..Default::default()}), Some(String::from("/usr/local/share/tessdata").as_str()), Some(String::from("eng").as_str())).unwrap();
+//!     let image_array = vec!["/workspaces/rusttesserast/tests/test_img.png", "/workspaces/rusttesserast/tests/test_img.png"];
+//!     let test = tesseract_base.recognize_doc(None, None, image_array, "txt").await;
+//! }
+//! ```
+//!
+//! ```rust, no_run
+//! use rusttesserast::tess_lib::TesseractApi;
+//!
+//! #[tokio::main]
+//! async fn main() {
+//!     let mut tesseract_base = TesseractApi::new(Some(TesseractApi{dpi: 3, psm:3, ..Default::default()}), Some(String::from("/usr/local/share/tessdata").as_str()), Some(String::from("eng").as_str())).unwrap();
+//!     let image_array = vec!["/workspaces/rusttesserast/tests/test_img.png", "/workspaces/rusttesserast/tests/test_img.png"];
+//!     let test = tesseract_base.recognize_doc("test/save/path", "test_data_file.txt", image_array, "tsv").await;
+//! }
+
 use crate::constanst::TesseractDefaultConstants;
 use crate::errors::TesseractError;
 use crate::file_types::OutputFileFormat;
@@ -13,20 +44,34 @@ use std::io::Write;
 use std::path::Path;
 use tesseract_plumbing as pl;
 
+
 #[derive(Derivative)]
 #[derivative(Default, Debug)]
+/// TesseractApi is a base pub structure for entire project.
 pub struct TesseractApi {
     #[derivative(Default(value = "300"))]
+    /// dpi (or Dot Per Inch) - is a measure of spatial printing, video, or image scanner dot density.
+    /// Tesseract works best on images with a Dot Per Inch (DPI) of at least 300 dpi.
+    /// All available options are described here - `<https://github.com/tesseract-ocr/tesseract/blob/main/doc/tesseract.1.asc>`. 
+    /// Default value - 300
     pub dpi: i32,
     #[derivative(Default(value = "4"))]
+    /// psm - is a Tesseract Page Segmentation Modes. 
+    /// All available options are described here - `<https://github.com/tesseract-ocr/tesseract/blob/main/doc/tesseract.1.asc>`. 
+    /// Default value - 4
     pub psm: u32,
     #[derivative(Default(value = "3"))]
+    /// oem - is a Tesseract Engine modes. 
+    /// All available options are described here - `<https://github.com/tesseract-ocr/tesseract/blob/main/doc/tesseract.1.asc>`. 
+    /// Default value - 3
     pub oem: u32,
     #[derivative(Default(value = "30"))]
     pub timeout: i32,
+    /// tesseract_plumbing base api
     pub tess_pl: pl::TessBaseApi,
 }
 
+/// TesseractApi is a base Implementation for pub struct TesseractApi.
 impl TesseractApi {
     fn default() -> Self {
         return TesseractApi {
@@ -56,6 +101,10 @@ impl TesseractApi {
         datapath: Option<&str>,
         lang: Option<&str>,
     ) -> Result<TesseractApi, TesseractError> {
+        /// Create instance of a tesseract api.
+        /// tesseract - TesseractApi object.
+        /// datapath - path to tesseract exec file.
+        /// lang - tesseract languages. Tesseract support more then a 100 languages.
         let mut tess = match tesseract {
             Some(tesseract) => tesseract,
             None => TesseractApi::default(),
@@ -166,6 +215,10 @@ impl TesseractApi {
     }
 
     pub fn save_doc(&mut self, path: Option<&str>, file_name: Option<&str>, doc_vec: Vec<String>) {
+        /// This function set path and file_name, join texts with \n sep and save doc.
+        /// path - optional path for saving a doc. If path is None, then file will be saved to a project dir.
+        /// file_name - optional name of a doc. Default value - data.txt.
+        /// doc_vec - vector with recognized documents.
         let binding = get_current_working_dir();
 
         let path = match path {
@@ -199,10 +252,16 @@ impl TesseractApi {
         image_array: Vec<&str>,
         output_type: &str,
     ) -> Result<(), TesseractError> {
+        /// This is a base function which recognize and save doc.
+        /// save_path - optional path for saving a doc. If path is None, then file will be saved to a project dir.
+        /// doc_name - optional name of a doc. Default value - data.txt
+        /// image_array - vector which contains a paths to available images.
+        /// output_type - a str which contains output type value. So far, only 4 types available
+        /// (txt, tsv, hocr)
         let output_type = match output_type {
             "txt" => OutputFileFormat::TXT,
             "tsv" => OutputFileFormat::TSV,
-            "HOCR" => OutputFileFormat::HOCR,
+            "hocr" => OutputFileFormat::HOCR,
             _ => panic!("None existing format {}", output_type),
         };
         let doc = match output_type {
