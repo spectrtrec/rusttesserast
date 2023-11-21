@@ -1,5 +1,6 @@
 # rusttesserast
 rusttesserast is a simple library providing the asynchronous methods for tesseract api in Rust.
+
 Documentation - https://docs.rs/rusttesserast/0.0.1-alpha.4/rusttesserast/
 # Usage
 Add this to your Cargo.toml:
