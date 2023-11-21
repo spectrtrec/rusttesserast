@@ -1,7 +1,11 @@
 [package]
+description = "A simple library providing the asynchronous methods for tesseract api."
 name = "rusttesserast"
-version = "0.1.0"
-edition = "2021"
+version = "0.0.1"
+edition = "2023"
+rust-version = "1.74.0"
+license = "MIT"
+readme = "README.md"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
