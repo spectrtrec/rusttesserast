@@ -182,7 +182,7 @@ impl TesseractApi {
 
         if !Path::new(path).exists() {
             format!("Path {path} doesnt exist.");
-            panic!("Path {path} doesnt exist. Use another path.")
+            panic!("Path {} doesnt exist. Use another path.", path)
         }
 
         let mut data_file =
