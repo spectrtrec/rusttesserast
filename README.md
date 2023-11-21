@@ -5,7 +5,7 @@ Add this to your Cargo.toml:
 ```
 [dependencies]
 ```
-rusttesserast = "0.0.1-alpha.0"
+rusttesserast = "0.0.1-alpha.1"
 ```
 use rusttesserast::tess_lib::TesseractApi;
 
