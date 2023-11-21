@@ -4,7 +4,7 @@ rusttesserast is a simple library providing the asynchronous methods for tessera
 Add this to your Cargo.toml:
 ```
 [dependencies]
-rusttesserast = "0.0.1-alpha.2"
+rusttesserast = "0.0.1-alpha.3"
 ```
 ```
 use rusttesserast::tess_lib::TesseractApi;
@@ -15,7 +15,6 @@ async fn main() {
     let image_array = vec!["/workspaces/rusttesserast/tests/test_img.png", "/workspaces/rusttesserast/tests/test_img.png"];
     let test = tesseract_base.recognize_doc(None, None, image_array, "txt").await;
 }
-
 ```
 # License
 Licensed under MIT license.
