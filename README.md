@@ -4,7 +4,7 @@ rusttesserast is a simple library providing the asynchronous methods for tessera
 Add this to your Cargo.toml:
 ```
 [dependencies]
-rusttesserast = "0.0.1-alpha.3"
+rusttesserast = "0.0.1-alpha.4"
 ```
 ```
 use rusttesserast::tess_lib::TesseractApi;
