@@ -4,6 +4,8 @@ use crate::file_types::OutputFileFormat;
 use crate::utils::get_current_working_dir;
 use derivative::Derivative;
 use either::*;
+use futures::prelude::*;
+use futures::stream::FuturesOrdered;
 use pl::TessBaseApiInitError;
 use std::ffi::CString;
 use std::fs::{metadata, File};
@@ -82,65 +84,85 @@ impl TesseractApi {
     pub fn set_image(&mut self, filename: &str) -> Result<(), TesseractError> {
         match pl::leptonica_plumbing::Pix::read(&CString::new(filename).unwrap()) {
             Ok(pix) => self.tess_pl.set_image_2(&pix),
-            Err(_) => return Err(TesseractError::NoSuchFileException),
+            Err(_) => panic!(
+                "There was a problem opening the file: {:?}",
+                TesseractError::NoSuchFileException
+            ),
         };
         Ok(())
     }
 
-    pub fn image_to_string(&mut self, filename: &str) -> Result<String, TesseractError> {
-        self.set_image(filename)?;
-        Ok(self
-            .tess_pl
-            .get_utf8_text()
-            .unwrap()
-            .as_ref()
-            .to_string_lossy()
-            .into_owned())
+    pub fn image_to_string(
+        &mut self,
+        filename: &str,
+    ) -> futures::future::Ready<Result<String, TesseractError>> {
+        self.set_image(filename);
+        future::ok(
+            self.tess_pl
+                .get_utf8_text()
+                .unwrap()
+                .as_ref()
+                .to_string_lossy()
+                .into_owned(),
+        )
     }
 
-    pub fn image_to_hocr(&mut self, filename: &str) -> Result<String, TesseractError> {
-        self.set_image(filename)?;
-        Ok(self
-            .tess_pl
-            .get_hocr_text(0)
-            .unwrap()
-            .as_ref()
-            .to_string_lossy()
-            .into_owned())
+    pub fn image_to_hocr(
+        &mut self,
+        filename: &str,
+    ) -> futures::future::Ready<Result<String, TesseractError>> {
+        self.set_image(filename);
+        future::ok(
+            self.tess_pl
+                .get_hocr_text(0)
+                .unwrap()
+                .as_ref()
+                .to_string_lossy()
+                .into_owned(),
+        )
     }
 
-    pub fn image_to_tsv(&mut self, filename: &str) -> Result<String, TesseractError> {
-        self.set_image(filename)?;
-        Ok(self
-            .tess_pl
-            .get_tsv_text(0)
-            .unwrap()
-            .as_ref()
-            .to_string_lossy()
-            .into_owned())
+    pub fn image_to_tsv(
+        &mut self,
+        filename: &str,
+    ) -> futures::future::Ready<Result<String, TesseractError>> {
+        self.set_image(filename);
+        future::ok(
+            self.tess_pl
+                .get_tsv_text(0)
+                .unwrap()
+                .as_ref()
+                .to_string_lossy()
+                .into_owned(),
+        )
     }
 
     #[allow(dead_code)]
-    fn get_text(&mut self) -> Result<String, TesseractError> {
-        Ok(self
-            .tess_pl
-            .get_utf8_text()
-            .unwrap()
-            .as_ref()
-            .to_string_lossy()
-            .into_owned())
+    async fn get_text(&mut self) -> futures::future::Ready<Result<String, TesseractError>> {
+        future::ok(
+            self.tess_pl
+                .get_utf8_text()
+                .unwrap()
+                .as_ref()
+                .to_string_lossy()
+                .into_owned(),
+        )
     }
 
-    pub fn iter_through_img(
+    pub async fn iter_through_img(
         &mut self,
-        api_ogject: fn(&mut TesseractApi, &str) -> Result<String, TesseractError>,
+        api_ogject: fn(
+            &mut TesseractApi,
+            &str,
+        ) -> futures::future::Ready<Result<String, TesseractError>>,
         image_array: Vec<&str>,
-    ) -> Vec<String> {
-        let mut rec_vec: Vec<String> = Vec::new();
+    ) -> Vec<Result<String, TesseractError>> {
+        let mut rec_vec: FuturesOrdered<future::Ready<Result<String, TesseractError>>> =
+            FuturesOrdered::new();
         for image in image_array.iter() {
-            rec_vec.push(api_ogject(self, image).unwrap());
+            rec_vec.push_back(api_ogject(self, image));
         }
-        rec_vec
+        rec_vec.collect().await
     }
 
     pub fn save_doc(&mut self, path: Option<&str>, file_name: Option<&str>, doc_vec: Vec<String>) {
@@ -170,7 +192,7 @@ impl TesseractApi {
             .expect("Unable to write file");
     }
 
-    pub fn recognize_doc(
+    pub async fn recognize_doc(
         &mut self,
         save_path: Option<&str>,
         doc_name: Option<&str>,
@@ -185,16 +207,37 @@ impl TesseractApi {
         };
         let doc = match output_type {
             OutputFileFormat::TXT => {
-                self.iter_through_img(TesseractApi::image_to_string, image_array)
+                let api_ogject: fn(
+                    &mut TesseractApi,
+                    &str,
+                )
+                    -> future::Ready<Result<String, TesseractError>> =
+                    TesseractApi::image_to_string;
+                self.iter_through_img(api_ogject, image_array).await
             }
-            OutputFileFormat::TSV => self.iter_through_img(TesseractApi::image_to_tsv, image_array),
+            OutputFileFormat::TSV => {
+                let api_ogject: fn(
+                    &mut TesseractApi,
+                    &str,
+                )
+                    -> future::Ready<Result<String, TesseractError>> = TesseractApi::image_to_tsv;
+                self.iter_through_img(api_ogject, image_array).await
+            }
             OutputFileFormat::HOCR => {
-                self.iter_through_img(TesseractApi::image_to_hocr, image_array)
+                let api_ogject: fn(
+                    &mut TesseractApi,
+                    &str,
+                )
+                    -> future::Ready<Result<String, TesseractError>> = TesseractApi::image_to_hocr;
+                self.iter_through_img(api_ogject, image_array).await
             }
             _ => panic!("None existing format"),
         };
-
-        self.save_doc(save_path, doc_name, doc);
+        self.save_doc(
+            save_path,
+            doc_name,
+            doc.into_iter().filter_map(|s| s.ok()).collect(),
+        );
         Ok(())
     }
 }
