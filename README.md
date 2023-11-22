@@ -13,7 +13,7 @@ See [documentation](https://docs.rs/rusttesserast) for more.
 Add this to your Cargo.toml:
 ```
 [dependencies]
-rusttesserast = "0.0.1-alpha.4"
+rusttesserast = "0.0.1"
 ```
 ```rust
 use rusttesserast::tess_lib::TesseractApi;

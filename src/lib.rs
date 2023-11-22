@@ -30,8 +30,9 @@
 //! }
 //!
 #![doc(
-
-    html_root_url = "https://docs.rs/rusttesserast/0.0.1-alpha.4"
+    html_logo_url = "https://github.com/spectrtrec/rusttesserast/blob/main/logo.png",
+    html_favicon_url = "https://github.com/spectrtrec/rusttesserast/blob/main/logo.png",
+    html_root_url = "https://docs.rs/rusttesserast/0.0.1"
 )]
 pub mod constanst;
 pub mod file_types;
