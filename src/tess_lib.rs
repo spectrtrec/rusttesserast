@@ -52,17 +52,17 @@ pub struct TesseractApi {
     #[derivative(Default(value = "300"))]
     /// dpi (or Dot Per Inch) - is a measure of spatial printing, video, or image scanner dot density.
     /// Tesseract works best on images with a Dot Per Inch (DPI) of at least 300 dpi.
-    /// All available options are described here - `<https://github.com/tesseract-ocr/tesseract/blob/main/doc/tesseract.1.asc>`. 
+    /// All available options are described here - `https://github.com/tesseract-ocr/tesseract/blob/main/doc/tesseract.1.asc`. 
     /// Default value - 300
     pub dpi: i32,
     #[derivative(Default(value = "4"))]
     /// psm - is a Tesseract Page Segmentation Modes. 
-    /// All available options are described here - `<https://github.com/tesseract-ocr/tesseract/blob/main/doc/tesseract.1.asc>`. 
+    /// All available options are described here - `https://github.com/tesseract-ocr/tesseract/blob/main/doc/tesseract.1.asc`. 
     /// Default value - 4
     pub psm: u32,
     #[derivative(Default(value = "3"))]
     /// oem - is a Tesseract Engine modes. 
-    /// All available options are described here - `<https://github.com/tesseract-ocr/tesseract/blob/main/doc/tesseract.1.asc>`. 
+    /// All available options are described here - `https://github.com/tesseract-ocr/tesseract/blob/main/doc/tesseract.1.asc`. 
     /// Default value - 3
     pub oem: u32,
     #[derivative(Default(value = "30"))]
