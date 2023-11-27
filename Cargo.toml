@@ -1,8 +1,8 @@
 [package]
 description = "A simple library providing the asynchronous methods for tesseract api."
 name = "rusttesserast"
-version = "0.0.1"
-edition = "2018"
+version = "0.0.2"
+edition = "2021"
 rust-version = "1.74.0"
 documentation = "https://docs.rs/rusttesserast/latest/rusttesserast/"
 license = "MIT"
