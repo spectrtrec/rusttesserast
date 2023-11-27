@@ -33,6 +33,7 @@
     html_logo_url = "https://github.com/spectrtrec/rusttesserast/blob/main/logo.png",
     html_favicon_url = "https://github.com/spectrtrec/rusttesserast/blob/main/logo.svg",
     html_root_url = "https://docs.rs/rusttesserast/0.0.2"
+
 )]
 pub mod constanst;
 pub mod file_types;
