@@ -2,6 +2,7 @@ use glob::glob;
 use rusttesserast::constanst::TesseractDefaultConstants;
 use rusttesserast::errors::TesseractError;
 use rusttesserast::tess_lib::TesseractApi;
+use rusttesserast::utils::get_current_working_dir;
 use std::path::{Path, PathBuf};
 
 #[test]
@@ -100,7 +101,9 @@ async fn test_hocr() -> Result<(), TesseractError> {
         Some(String::from("/usr/local/share/tessdata").as_str()),
         Some(String::from("eng").as_str()),
     )?;
-    let result = cube.image_to_hocr(String::from("tests/test_img.png").as_str()).await;
+    let result = cube
+        .image_to_hocr(String::from("tests/test_img.png").as_str())
+        .await;
     assert!(result?.contains(" <div class='ocr_page'"));
     Ok(())
 }
@@ -112,7 +115,9 @@ async fn test_image_to_string() -> Result<(), TesseractError> {
         Some(String::from("/usr/local/share/tessdata").as_str()),
         Some(String::from("eng").as_str()),
     )?;
-    let result = cube.image_to_string(String::from("tests/test_img.png").as_str()).await;
+    let result = cube
+        .image_to_string(String::from("tests/test_img.png").as_str())
+        .await;
     assert!(result?.contains("World!"));
     Ok(())
 }
@@ -124,8 +129,12 @@ async fn test_image_to_string_err() -> () {
         None,
         Some(String::from("/usr/local/share/tessdata").as_str()),
         Some(String::from("eng").as_str()),
-    ).unwrap();
-    let result = cube.image_to_string(String::from("tests/test_imgk.png").as_str()).await.unwrap();
+    )
+    .unwrap();
+    let result = cube
+        .image_to_string(String::from("tests/test_imgk.png").as_str())
+        .await
+        .unwrap();
     ()
 }
 
@@ -136,7 +145,9 @@ async fn test_image_to_tsv() -> Result<(), TesseractError> {
         Some(String::from("/usr/local/share/tessdata").as_str()),
         Some(String::from("eng").as_str()),
     )?;
-    let result = cube.image_to_tsv(String::from("tests/test_img.png").as_str()).await?;
+    let result = cube
+        .image_to_tsv(String::from("tests/test_img.png").as_str())
+        .await?;
     assert_eq!(result, include_str!("data.txt"));
     Ok(())
 }
@@ -150,7 +161,9 @@ async fn test_recognize_doc() -> Result<(), TesseractError> {
     )
     .unwrap();
     let image_array = vec!["tests/test_img.png"];
-    tesseract_base.recognize_doc(None, None, image_array, "tsv").await?;
+    tesseract_base
+        .recognize_doc(None, None, image_array, "tsv", None)
+        .await?;
     Ok(())
 }
 
@@ -164,7 +177,9 @@ async fn test_recognize_doc_panic() -> () {
     )
     .unwrap();
     let image_array = vec!["tests/test_img.png"];
-    tesseract_base.recognize_doc(None, None, image_array, "tsvs").await;
+    tesseract_base
+        .recognize_doc(None, None, image_array, "tsvs", None)
+        .await;
 }
 
 #[test]
@@ -179,7 +194,7 @@ fn test_save_doc() -> () {
     tesseract_base.save_doc(
         Some(String::from("/usr/local/share/tessdata").as_str()),
         None,
-        doc_vec,
+        &doc_vec,
     );
     let files_: Vec<PathBuf> = glob("/usr/local/share/tessdata/data.txt")
         .unwrap()
@@ -188,6 +203,40 @@ fn test_save_doc() -> () {
     assert!(files_.len() > 0);
     ()
 }
+#[tokio::test]
+async fn test_recognize_doc_save_doc() -> () {
+    let mut tesseract_base = TesseractApi::new(
+        None,
+        Some(String::from("/usr/local/share/tessdata").as_str()),
+        Some(String::from("eng").as_str()),
+    )
+    .unwrap();
+    let image_array = vec!["tests/test_img.png"];
+    let res_path = get_current_working_dir()
+        .as_os_str()
+        .to_str()
+        .unwrap()
+        .to_owned()
+        + "/tests/";
+    let res = tesseract_base
+        .recognize_doc(
+            Some(res_path.as_str()),
+            Some(String::from("data_custom.txt").as_str()),
+            image_array,
+            "txt",
+            Some(true),
+        )
+        .await.unwrap();
+    assert_eq!(res.len(), 1);
+    println!("{:?}", res);
+    let files_: Vec<PathBuf> = glob("/workspaces/rusttesserast/tests/data_custom.txt")
+    .unwrap()
+    .filter_map(Result::ok)
+    .collect();
+    assert!(files_.len() > 0);
+    ()
+}
+
 #[test]
 fn test_save_doc_custom_name() -> () {
     let mut tesseract_base = TesseractApi::new(
@@ -200,7 +249,7 @@ fn test_save_doc_custom_name() -> () {
     tesseract_base.save_doc(
         Some(String::from("/usr/local/share/tessdata").as_str()),
         Some(String::from("data_custom.txt").as_str()),
-        doc_vec,
+        &doc_vec,
     );
     let files_: Vec<PathBuf> = glob("/usr/local/share/tessdata/data_custom.txt")
         .unwrap()
@@ -223,7 +272,7 @@ fn test_save_doc_panic_path() -> () {
     tesseract_base.save_doc(
         Some(String::from("/usr/local/share/tessdata_fake").as_str()),
         Some(String::from("data_custom.txt").as_str()),
-        doc_vec,
+        &doc_vec,
     );
     ()
 }
