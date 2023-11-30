@@ -1,0 +1,43 @@
+name: Add Badges
+on:
+  push:
+    branches: [ main, dev ]
+jobs:
+  run:
+    runs-on: self-hosted
+    steps:
+      - uses: wow-actions/add-badges@v1
+        env:
+          repo_url: ${{ github.event.repository.html_url }}
+          repo_name: ${{ github.event.repository.name }}
+          repo_owner: ${{ github.event.repository.owner.login }}
+        with:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          center: true
+          badges: |
+            [
+              [
+                {
+                  "badge": "https://img.shields.io/github/license/${{ env.repo_owner }}/${{ env.repo_name }}?style=flat-square",
+                  "alt": "MIT License",
+                  "link": "${{ env.repo_url }}/blob/master/LICENSE"
+                },
+                {
+                  "badge": "https://img.shields.io/badge/language-TypeScript-blue.svg?style=flat-square",
+                  "alt": "Language",
+                  "link": "https://www.rust-lang.org/"
+                },
+                {
+                  "badge": "https://img.shields.io/badge/PRs-Welcome-brightgreen.svg?style=flat-square",
+                  "alt": "PRs Welcome",
+                  "link": "${{ env.repo_url }}/pulls"
+                },
+              ],
+              [
+                {
+                  "badge": "https://img.shields.io/github/workflow/status/${{ env.repo_owner }}/${{ env.repo_name }}/Release/master?logo=github&style=flat-square",
+                  "alt": "build",
+                  "link": "${{ env.repo_url }}/actions/workflows/rust.yaml"
+                }
+              ]
+            ]
