@@ -1,0 +1,43 @@
+name: Test lib.
+on: 
+  push:
+    branches: [ main, dev ]
+
+jobs:
+  stop-image:
+    runs-on: self-hosted
+    steps:
+      - name: Checkout Dev
+        uses: actions/checkout@v4
+      - name: Stop container
+        continue-on-error: true
+        run: docker stop rtest
+      - name: Remove container
+        continue-on-error: true
+        run : docker rm rtest  
+  build-docker:
+    runs-on: self-hosted
+    needs: [ stop-image ]
+    steps:
+      - name: Checkout Dev
+        uses: actions/checkout@v4
+      - name: Build and run docker container
+        run: docker build -t rtesseract .
+      - name: Run docker
+        run : docker run --name rtest -d test_rust
+  build-app:
+    runs-on: self-hosted
+    needs: [ stop-image, build-docker ]
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Build app
+        run: docker exec rtest cargo build
+  test-app:
+    runs-on: self-hosted
+    needs: [ stop-image, build-docker, build-app ]
+    steps:
+      - name: Checkout Dev
+        uses: actions/checkout@v4
+      - name: Test app
+        run: docker exec rtest cargo test

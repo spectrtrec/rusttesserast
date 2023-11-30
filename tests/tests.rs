@@ -229,7 +229,12 @@ async fn test_recognize_doc_save_doc() -> () {
         .await.unwrap();
     assert_eq!(res.len(), 1);
     println!("{:?}", res);
-    let files_: Vec<PathBuf> = glob("/workspaces/rusttesserast/tests/data_custom.txt")
+    let res_path = get_current_working_dir()
+        .as_os_str()
+        .to_str()
+        .unwrap()
+        .to_owned() + "/tests/data_custom.txt";
+    let files_: Vec<PathBuf> = glob(res_path.as_str())
     .unwrap()
     .filter_map(Result::ok)
     .collect();
