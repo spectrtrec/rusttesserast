@@ -1,0 +1,27 @@
+name: Test lib.
+on: push
+
+jobs:
+  build-docker:
+    runs-on: self-hosted
+    steps:
+      - name: Checkout Dev
+        uses: actions/checkout@v4
+      - name: Build and run docker container
+        run: docker build -t rtesseract .
+      - name: Run docker
+        run : docker run --name rtest -d test_rust
+  build-app:
+    runs-on: self-hosted
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Build app
+        run: docker exec rtest cargo build
+  test-app:
+    runs-on: self-hosted
+    steps:
+      - name: Checkout Dev
+        uses: actions/checkout@v4
+      - name: Test app
+        run: docker exec rtest cargo test
