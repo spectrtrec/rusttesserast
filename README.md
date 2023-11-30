@@ -1,7 +1,8 @@
 # Rusttesserast
 [![Crates.io](https://img.shields.io/crates/v/rusttesserast.svg)](https://crates.io/crates/rusttesserast)
 [![Documentation](https://docs.rs/rusttesserast/badge.svg)](https://docs.rs/rusttesserast)
-
+<!-- [START BADGES] -->
+<!-- [END BADGES] -->
 <p align="center">
   <img src="logo.png" alt="logo"/>
 </p>
