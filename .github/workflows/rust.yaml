@@ -32,7 +32,7 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
       - name: Build app
-        run: docker exec rtesseract cargo build
+        run: docker exec rtest cargo build
   test-app:
     runs-on: self-hosted
     needs: [ stop-image, build-docker, build-app ]
@@ -40,4 +40,4 @@ jobs:
       - name: Checkout Dev
         uses: actions/checkout@v4
       - name: Test app
-        run: docker exec rtesseract cargo test
+        run: docker exec rtest cargo test
