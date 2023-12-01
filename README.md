@@ -1,5 +1,6 @@
 # Rusttesserast
 [![Crates.io](https://img.shields.io/crates/v/rusttesserast.svg)](https://crates.io/crates/rusttesserast)
+![rust 1.74](https://img.shields.io/badge/rust-1.74-blue.svg)
 [![Documentation](https://docs.rs/rusttesserast/badge.svg)](https://docs.rs/rusttesserast)
 [![Tests](https://github.com/spectrtrec/rusttesserast/actions/workflows/rust.yaml/badge.svg)](https://github.com/spectrtrec/rusttesserast/actions/)
 [![License](https://img.shields.io/crates/l/mit.svg)](./LICENSE)
