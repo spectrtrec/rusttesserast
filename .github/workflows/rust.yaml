@@ -1,4 +1,4 @@
-name: Test lib.
+name: build
 on: 
   push:
     branches: [ main, dev ]
@@ -24,7 +24,7 @@ jobs:
       - name: Build and run docker container
         run: docker build -t rtesseract .
       - name: Run docker
-        run : docker run --name rtest -d test_rust
+        run : docker run --name rtest -d rtesseract
   build-app:
     runs-on: self-hosted
     needs: [ stop-image, build-docker ]
